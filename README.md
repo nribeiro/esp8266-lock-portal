@@ -78,3 +78,6 @@ A simple Wi-Fi-based ESP8266 web portal to control a relay for unlocking a locke
    **or**
    - Send a direct command via URL:  
      `http://192.168.4.1/cmd?val=ACTIVATE`
+
+## ✨ Acknowledgements
+Built with ❤️ using ESP8266WebServer and DNSServer libraries.
