@@ -57,3 +57,24 @@ A simple Wi-Fi-based ESP8266 web portal to control a relay for unlocking a locke
 1. Clone this repo:
 ```bash
 git clone https://github.com/yourusername/esp8266-lock-portal.git
+
+2. Open esp8266-lock-portal.ino in the Arduino IDE
+
+3. Install the following libraries (if not already installed):
+   - `ESP8266WiFi`
+   - `ESP8266WebServer`
+   - `DNSServer`
+
+4. In the **Tools** menu:
+   - Select your board: `NodeMCU 1.0 (ESP-12E Module)`
+   - Choose the correct **port**
+
+5. Click **Upload** to flash the firmware
+
+6. Connect to the Wi-Fi hotspot `ESP-CMD-PORTAL`
+
+7. Open your browser and navigate to `http://192.168.4.1`:
+   - Use the **"OPEN"** button in the web interface  
+   **or**
+   - Send a direct command via URL:  
+     `http://192.168.4.1/cmd?val=ACTIVATE`
