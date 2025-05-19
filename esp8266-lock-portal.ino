@@ -9,10 +9,7 @@ ESP8266WebServer server(80);
 const char* apSSID = "ESP-CMD-PORTAL";
 
 String receivedMessage = "";
-const int relay = 5; //D1
-
-unsigned long lastLedToggle = 0;
-bool ledState = false;
+const int relay = 5;  //D1
 
 unsigned long lastCommandTime = 0;
 const unsigned long commandCooldown = 5000;  // 5 segundos
@@ -21,6 +18,16 @@ const unsigned long commandCooldown = 5000;  // 5 segundos
 bool isRelayActive = false;
 unsigned long relayStartTime = 0;
 const unsigned long relayDuration = 200;  // ms
+
+bool ledPulseActive = false;
+unsigned long ledPulseStartTime = 0;
+const unsigned long ledPulseDuration = 100;  // ms
+
+#define BUTTON_PIN D2
+const int buttonPin = 4;  // D2
+bool lastButtonState = HIGH;
+unsigned long lastDebounceTime = 0;
+const unsigned long debounceDelay = 50;  // ms
 
 // Página principal
 void handleRoot() {
@@ -170,11 +177,42 @@ void handleNotFound() {
   server.send(302, "text/plain", "");
 }
 
+void handleButtonPress() {
+  static bool buttonWasPressed = false;
+  int reading = digitalRead(buttonPin);
+  unsigned long now = millis();
+
+  // Se o botão está pressionado (LOW) e ainda não foi processado
+  if (reading == LOW && !buttonWasPressed) {
+    Serial.println("Botão pressionado!");
+
+    // Verifica o cooldown
+    if (now - lastCommandTime > commandCooldown) {
+      triggerRelay();
+      lastCommandTime = now;
+    } else {
+      Serial.println("Cooldown ativo — comando ignorado");
+    }
+
+    buttonWasPressed = true;  // marca como já processado
+  }
+
+  // Quando o botão é libertado, limpa o estado
+  if (reading == HIGH && buttonWasPressed) {
+    buttonWasPressed = false;
+  }
+}
+
 // Acionar relé (não bloqueante)
 void triggerRelay() {
   digitalWrite(relay, HIGH);
   isRelayActive = true;
   relayStartTime = millis();
+
+  // Piscar o LED
+  digitalWrite(LED_BUILTIN, LOW);  // acende (ativo em LOW)
+  ledPulseActive = true;
+  ledPulseStartTime = millis();
 }
 
 // Comunicação via Serial
@@ -206,15 +244,6 @@ void handleSerialComm() {
 }
 */
 
-// Piscar LED (debug visual)
-void blinkLed() {
-  unsigned long now = millis();
-  if (now - lastLedToggle > 1000) {
-    ledState = !ledState;
-    digitalWrite(LED_BUILTIN, ledState ? LOW : HIGH);
-    lastLedToggle = now;
-  }
-}
 
 // Verificar se já passou o tempo de ativação do relé
 void handleRelayTimer() {
@@ -224,10 +253,21 @@ void handleRelayTimer() {
   }
 }
 
+void handleLedPulse() {
+  if (ledPulseActive && millis() - ledPulseStartTime > ledPulseDuration) {
+    digitalWrite(LED_BUILTIN, HIGH);  // apaga
+    ledPulseActive = false;
+  }
+}
+
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
-  pinMode(relay, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH);
+
   digitalWrite(relay, LOW);
+  pinMode(relay, OUTPUT);
+
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
 
   Serial.begin(9600);
 
@@ -250,6 +290,7 @@ void loop() {
   //handleSerialComm();
   dnsServer.processNextRequest();
   server.handleClient();
-  //blinkLed();
   handleRelayTimer();
+  handleButtonPress();
+  handleLedPulse();
 }
