@@ -268,6 +268,9 @@ void setup() {
 
   Serial.begin(9600);
 
+  // Allow immediate command execution after boot by resetting the cooldown
+  lastCommandTime = millis() - commandCooldown;
+
   WiFi.softAP(apSSID);
   IPAddress myIP = WiFi.softAPIP();
   Serial.println("AP IP address: ");
