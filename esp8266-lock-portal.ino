@@ -25,9 +25,6 @@ const unsigned long ledPulseDuration = 100;  // ms
 
 #define BUTTON_PIN D2
 const int buttonPin = 4;  // D2
-bool lastButtonState = HIGH;
-unsigned long lastDebounceTime = 0;
-const unsigned long debounceDelay = 50;  // ms
 
 // Página principal
 void handleRoot() {
